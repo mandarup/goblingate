@@ -45,16 +45,19 @@ class Signal(object):
 SIGNAL = Signal()
 
 # Define GPIO to use on Pi
-GPIO_TRIGGER = 23
-GPIO_ECHO = 24
+GPIO_TRIGGER_UPPER = 23
+GPIO_ECHO_UPPER = 24
 GPIO_RELAY_UPPER = 22
+
+GPIO_TRIGGER_LOWER = 17
+GPIO_ECHO_LOWER = 18
 GPIO_RELAY_LOWER = 27
 
-UPPER_LOW = 20
-UPPER_HIGH = 5  # 20
+UPPER_TANK_LOW = 20
+UPPER_TANK_HIGH = 5  # 20
 
-LOWER_LOW = 20  # 800
-LOWER_HIGH = 5  # 20
+LOWER_TANK_LOW = 20  # 800
+LOWER_TANK_HIGH = 5  # 20
 
 UPPER_RELAY_MAX_DUR = 10
 LOWER_RELAY_MAX_DUR = 100
@@ -222,12 +225,13 @@ def relay_logic_lower(lower_relay, lower_tank, clock_times):
 # ----------------------
 
 def test_init():
-    upper_tank = tank.Tank(low=UPPER_LOW, high=UPPER_HIGH)
-    lower_tank = tank.Tank(low=LOWER_LOW, high=LOWER_HIGH)
+    upper_tank = tank.Tank(low=UPPER_TANK_LOW, high=UPPER_TANK_HIGH)
+    lower_tank = tank.Tank(low=LOWER_TANK_LOW, high=LOWER_TANK_HIGH)
     upper_tank_relay = relay.Relay(duration=20)
     lower_tank_relay = relay.Relay(duration=20)
 
     now = dt.datetime.now()
+    print('now: {}'.format(now.time()))
     clock_times_upper = [
         clock.Period(
             now.time(),
@@ -249,11 +253,22 @@ def test_init():
     print('clock times ', [(c.start, c.stop) for c in clock_times_upper])
     return upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, clock_times_upper, clock_times_lower
 
+
+def init(settings):
+    upper_tank = tank.Tank(low=settings.UPPER_TANK_LOW, high=settings.UPPER_TANK_HIGH)
+    lower_tank = tank.Tank(low=settings.LOWER_TANK_LOW, high=settings.LOWER_TANK_HIGH)
+    upper_tank_relay = relay.Relay(duration=None)
+    lower_tank_relay = relay.Relay(duration=None)
+    return (upper_tank, lower_tank, upper_tank_relay, lower_tank_relay,
+        clock_times_upper, clock_times_lower)
+
+
+
 # -----------------------
 # Main Script
 # -----------------------
 
-def main():
+def start_monitoring():
     # Use BCM GPIO references
     # instead of physical pin numbers
     GPIO.setmode(GPIO.BCM)
@@ -263,15 +278,19 @@ def main():
     print("Speed of sound is", SOUND_SPEED / 100, "m/s at ", TEMPERATURE, "deg")
 
     # Set pins as output and input
-    GPIO.setup(GPIO_TRIGGER, GPIO.OUT)  # Trigger
-    GPIO.setup(GPIO_ECHO, GPIO.IN)      # Echo
+    GPIO.setup(GPIO_TRIGGER_UPPER, GPIO.OUT)  # Trigger
+    GPIO.setup(GPIO_ECHO_UPPER, GPIO.IN)      # Echo
+
+    GPIO.setup(GPIO_TRIGGER_LOWER, GPIO.OUT)  # Trigger
+    GPIO.setup(GPIO_ECHO_LOWER, GPIO.IN)      # Echo
 
     GPIO.setup(GPIO_RELAY_UPPER, GPIO.OUT)
     GPIO.setup(GPIO_RELAY_LOWER, GPIO.OUT)
 
 
     # Set trigger to False (Low)
-    GPIO.output(GPIO_TRIGGER, False)
+    GPIO.output(GPIO_TRIGGER_UPPER, False)
+    GPIO.output(GPIO_TRIGGER_LOWER, False)
     GPIO.output(GPIO_RELAY_UPPER, False)
     GPIO.output(GPIO_RELAY_LOWER, False)
 
@@ -289,8 +308,12 @@ def main():
         # relay = RelayState(dur_keep_on=20)
         upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, clock_times_upper, clock_times_lower = test_init()
         while True:
-            print('reading distance...')
-            upper_level = measure_average(GPIO_TRIGGER, GPIO_ECHO)
+            print('reading upper distance...')
+            upper_level = measure_average(GPIO_TRIGGER_UPPER, GPIO_ECHO_UPPER)
+
+            print('reading lower distance...')
+            lower_level = measure_average(GPIO_TRIGGER_LOWER, GPIO_ECHO_LOWER)
+
             print("upper tank level : {0:5.1f}".format(upper_level))
             # time.sleep(1)
 
@@ -300,7 +323,7 @@ def main():
             print(upper_tank.__dict__)
 
             print('updating lower tank')
-            lower_tank.update(8)
+            lower_tank.update(lower_level)
             print(lower_tank.__dict__)
 
             upper_tank_relay = relay_logic_upper(
@@ -324,4 +347,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    start_monitoring()

@@ -1,0 +1,42 @@
+
+
+HOME_WATER_SYS :
+    CLOCK_TIMES_UPPER_TANK :
+        -
+            START : 04:30:0
+            STOP : 05:00:0
+        -
+            START : 06:30:0
+            STOP : 07:00:0
+
+    CLOCK_TIMES_LOWER_TANK :
+        -
+            START : 05:00:0
+            STOP : 05:30:0
+        -
+            START : 07:00:0
+            STOP : 07:30:0
+
+
+    # Define GPIO to use on Pi
+    GPIO_TRIGGER_UPPER : 23 # pin 16
+    GPIO_ECHO_UPPER : 24    # pin 18
+
+    GPIO_TRIGGER_LOWER : 17 # Pin #11
+    GPIO_ECHO_LOWER : 18    # Pin #12
+
+    GPIO_RELAY_UPPER : 22
+    GPIO_RELAY_LOWER : 27
+
+    UPPER_TANK_LOW : 20
+    UPPER_TANK_HIGH : 5  # 20
+
+    LOWER_TANK_LOW : 20  # 800
+    LOWER_TANK_HIGH : 5  # 20
+
+    UPPER_RELAY_MAX_DUR : 10
+    LOWER_RELAY_MAX_DUR : 100
+
+    # N_SAMPLES_PER_INTERVAL : 10
+    UPDATE_INTERVAL : 5
+    ULTRASONIC_SENSOR_PULSE_DELAY : .2
