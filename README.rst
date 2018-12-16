@@ -2,14 +2,46 @@
 goblingate
 ==========
 
+Installation
+------------
+
+::
+
+    $ cd ~/projects/goblingate
+    
+    # for dev
+    $ sudo pip install -e .   
+    
+    # or optionally for deployment (not necessary)
+    $ sudo pip install .
+
+Settings
+--------
+
+Create a copy of  ``data/settings_template.yml`` at  ``~/.goblingate/settings.yml`` if does not exist and fill in details.
 
 
+Help
+----
 
+::
 
+   # available sub packages
+   $ goblingate -h
 
-Python Boilerplate contains all the boilerplate you need to create a Python package.
+   # help on specific subpackage, e.g water_level
+   $ goblingate water_level -h
+   
+   
+   
+Run
+---
 
+::
 
+    # start water level monitoring
+    $ goblingate water_level
+   
 
 Features
 --------
