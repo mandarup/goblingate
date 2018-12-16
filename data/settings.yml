@@ -4,8 +4,8 @@ HOME_WATER_SYS :
     # USER SETTINGS
     CLOCK_TIMES_UPPER_TANK :
         -
-            START : '15:00'
-            STOP : '16:00'
+            START : '17:00'
+            STOP : '17:01'
         -
             START : '06:30'
             STOP : '07:00'
@@ -18,8 +18,16 @@ HOME_WATER_SYS :
 
     CLOCK_TIMES_LOWER_TANK :
         -
-            START : '05:00'
-            STOP : '05:30'
+            START : '17:01'
+            STOP : '17:02'
+        -
+            START : '07:00'
+            STOP : '07:30'
+
+    CLOCK_TIMES_GARDEN :
+        -
+            START : '17:01'
+            STOP : '17:02'
         -
             START : '07:00'
             STOP : '07:30'
@@ -30,8 +38,11 @@ HOME_WATER_SYS :
     LOWER_TANK_LOW : 200  # 800
     LOWER_TANK_HIGH : 5  # 20
 
-    UPPER_RELAY_MAX_DUR : 10
-    LOWER_RELAY_MAX_DUR : 100
+    UPPER_RELAY_MAX_DUR : 1800
+    LOWER_RELAY_MAX_DUR : 1800
+
+    GARDEN_RELAY_MAX_DUR : 300
+
 
     UPDATE_INTERVAL : 5
     ULTRASONIC_SENSOR_PULSE_DELAY : .1
@@ -41,8 +52,10 @@ HOME_WATER_SYS :
     # GPIO PIN SETTINGS - EDIT WITH CAUTION
     GPIO_TRIGGER_UPPER : 23 # pin 16
     GPIO_ECHO_UPPER : 24    # pin 18
-    GPIO_RELAY_UPPER : 22
+    GPIO_RELAY_UPPER : 22 # pin 15
 
     GPIO_TRIGGER_LOWER : 17 # Pin #11
     GPIO_ECHO_LOWER : 18    # Pin #12
-    GPIO_RELAY_LOWER : 27
+    GPIO_RELAY_LOWER : 27 # 13
+
+    GPIO_RELAY_GARDEN : 25 # pin 22
