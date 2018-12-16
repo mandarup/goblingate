@@ -195,6 +195,39 @@ def relay_logic_lower(lower_relay, lower_tank, lower_relay_max_dur, clock_times)
     return lower_relay
 
 
+
+def relay_logic_garden(garden_relay, relay_max_dur, clock_times):
+    action_time = False
+    now = dt.datetime.now().time()
+    for t in clock_times:
+        if t.start <= now < t.stop:
+            action_time = True
+            break
+        else:
+            print("wrong time ", t.start, now, t.stop)
+            garden_relay.update(constants.SIGNAL.OFF)
+
+    if action_time:
+        if not garden_relay.is_on:
+            print('setting lower relay ON {}'.format(garden_relay.is_on))
+            garden_relay.update(constants.SIGNAL.ON)
+        else:
+            print('lower relay is already ON')
+
+
+    print('garden relay state: {}'.format(garden_relay.is_on))
+
+    if garden_relay.start_time is not None and garden_relay.stop_time is None:
+        dur = dt.datetime.now() - garden_relay.start_time
+        if dur.total_seconds() >= relay_max_dur:
+            garden_relay.update(constants.SIGNAL.OFF)
+            print('lower relay max dur exceeded, forcing OFF.')
+    return garden_relay
+
+
+
+
+
 def convert_time(timers):
     parsed = []
     for t in timers:
@@ -205,34 +238,43 @@ def convert_time(timers):
 # test input
 # ----------------------
 
-def test_init():
-    upper_tank = tank.Tank(low=UPPER_TANK_LOW, high=UPPER_TANK_HIGH)
-    lower_tank = tank.Tank(low=LOWER_TANK_LOW, high=LOWER_TANK_HIGH)
+def init_debug(settings):
+    upper_tank = tank.Tank(low=settings.UPPER_TANK_LOW, high=settings.UPPER_TANK_HIGH)
+    lower_tank = tank.Tank(low=settings.LOWER_TANK_LOW, high=settings.LOWER_TANK_HIGH)
     upper_tank_relay = relay.Relay(duration=20)
     lower_tank_relay = relay.Relay(duration=20)
+    garden_relay =  relay.Relay(duration=20)
 
     now = dt.datetime.now()
     print('now: {}'.format(now.time()))
     clock_times_upper = [
         clock.Period(
-            now.time(),
+            (now + relativedelta.relativedelta(
+                seconds=10)).time(),
             (now +
              relativedelta.relativedelta(
-                 seconds=300)).time()),
-        clock.Period((now + relativedelta.relativedelta(seconds=620)).time(),
-               (now + relativedelta.relativedelta(seconds=700)).time())]
+                 seconds=60)).time()),
+        clock.Period((now + relativedelta.relativedelta(seconds=6200)).time(),
+               (now + relativedelta.relativedelta(seconds=7000)).time())]
     clock_times_lower = [
         clock.Period(
             (now +
              relativedelta.relativedelta(
-                 seconds=300)).time(),
+                 seconds=70)).time(),
             (now +
              relativedelta.relativedelta(
-                 seconds=600)).time()),
-        clock.Period((now + relativedelta.relativedelta(seconds=700)).time(),
-               (now + relativedelta.relativedelta(seconds=800)).time())]
-    print('clock times ', [(c.start, c.stop) for c in clock_times_upper])
-    return upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, clock_times_upper, clock_times_lower
+                 seconds=130)).time()),
+        clock.Period((now + relativedelta.relativedelta(seconds=7000)).time(),
+               (now + relativedelta.relativedelta(seconds=8000)).time())]
+    clock_times_garden = [
+        clock.Period(
+            (now +
+             relativedelta.relativedelta(
+                 seconds=140)).time(),
+            (now +
+             relativedelta.relativedelta(
+                 seconds=200)).time()),]
+    return upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, garden_relay,clock_times_upper, clock_times_lower, clock_times_garden
 
 
 def init(settings):
@@ -240,12 +282,14 @@ def init(settings):
     lower_tank = tank.Tank(low=settings.LOWER_TANK_LOW, high=settings.LOWER_TANK_HIGH)
     upper_tank_relay = relay.Relay(duration=None)
     lower_tank_relay = relay.Relay(duration=None)
+    garden_relay = relay.Relay(duration=None)
 
     clock_times_upper = convert_time(settings.CLOCK_TIMES_UPPER_TANK)
     clock_times_lower = convert_time(settings.CLOCK_TIMES_LOWER_TANK)
+    clock_times_garden = convert_time(settings.CLOCK_TIMES_GARDEN)
 
     return (upper_tank, lower_tank, upper_tank_relay, lower_tank_relay,
-        clock_times_upper, clock_times_lower)
+        garden_relay, clock_times_upper, clock_times_lower, clock_times_garden)
 
 
 
@@ -261,7 +305,6 @@ def setup_gpio(settings):
     # instead of physical pin numbers
     GPIO.setmode(GPIO.BCM)
 
-
     print("Ultrasonic Measurement")
     print("Speed of sound is", SOUND_SPEED / 100, "m/s at ", TEMPERATURE, "deg")
 
@@ -274,17 +317,19 @@ def setup_gpio(settings):
 
     GPIO.setup(settings.GPIO_RELAY_UPPER, GPIO.OUT)
     GPIO.setup(settings.GPIO_RELAY_LOWER, GPIO.OUT)
-
+    GPIO.setup(settings.GPIO_RELAY_GARDEN, GPIO.OUT)
 
     # Set trigger to False (Low)
-    GPIO.output(settings.GPIO_TRIGGER_UPPER, False)
-    GPIO.output(settings.GPIO_TRIGGER_LOWER, False)
-    GPIO.output(settings.GPIO_RELAY_UPPER, False)
-    GPIO.output(settings.GPIO_RELAY_LOWER, False)
+    GPIO.output(settings.GPIO_TRIGGER_UPPER, True)
+    GPIO.output(settings.GPIO_TRIGGER_LOWER, True)
+    GPIO.output(settings.GPIO_RELAY_UPPER, True)
+    GPIO.output(settings.GPIO_RELAY_LOWER, True)
+    GPIO.output(settings.GPIO_RELAY_GARDEN, True)
 
 
 def start_monitoring(settings):
 
+    print('init gpio')
     setup_gpio(settings)
 
     # Allow module to settle
@@ -297,10 +342,12 @@ def start_monitoring(settings):
     # the user seeing lots of unnecessary error
     # messages.
     try:
-        # relay = RelayState(dur_keep_on=20)
-        # upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, clock_times_upper, clock_times_lower = test_init()
-        (upper_tank, lower_tank, upper_tank_relay, lower_tank_relay,
-            clock_times_upper, clock_times_lower) = init(settings)
+        # (upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, garden_relay,
+        #     clock_times_upper, clock_times_lower, clock_times_garden) = init(settings)
+
+        (upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, garden_relay,
+            clock_times_upper, clock_times_lower, clock_times_garden) = init_debug(settings)
+
 
         while True:
             print('reading upper distance...')
@@ -338,8 +385,18 @@ def start_monitoring(settings):
                 lower_tank_relay, lower_tank, settings.LOWER_RELAY_MAX_DUR,
                 clock_times_lower)
 
-            GPIO.output(settings.GPIO_RELAY_UPPER, upper_tank_relay.is_on)
-            GPIO.output(settings.GPIO_RELAY_LOWER, lower_tank_relay.is_on)
+            garden_relay = relay_logic_garden(garden_relay, settings.GARDEN_RELAY_MAX_DUR,clock_times_garden)
+
+            GPIO.output(settings.GPIO_RELAY_UPPER, upper_tank_relay.signal)
+            GPIO.output(settings.GPIO_RELAY_LOWER, lower_tank_relay.signal)
+            GPIO.output(settings.GPIO_RELAY_GARDEN, garden_relay.signal)
+
+            print('-' * 20 )
+            print('UPPER RELAY: {}'.format(upper_tank_relay.is_on))
+            print('LOWER RELAY: {}'.format(lower_tank_relay.is_on))
+            print('UPPER TANK LEVEL: {}'.format(upper_level))
+            print('LOWER TANK LEVEL: {}'.format(lower_level))
+            print('-' * 20 )
 
             if upper_tank_relay.stop_time is not None:
                 upper_tank_relay.reset()
