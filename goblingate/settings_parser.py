@@ -33,5 +33,5 @@ def parse_water_level_settings(settings):
 
     parsed['CLOCK_TIMES_UPPER_TANK'] = parse_timers(wlsettings['CLOCK_TIMES_UPPER_TANK'])
     parsed['CLOCK_TIMES_LOWER_TANK'] = parse_timers(wlsettings['CLOCK_TIMES_LOWER_TANK'])
-
+    parsed['CLOCK_TIMES_GARDEN'] = parse_timers(wlsettings['CLOCK_TIMES_GARDEN'])
     return parsed
