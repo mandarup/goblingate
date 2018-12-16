@@ -342,11 +342,11 @@ def start_monitoring(settings):
     # the user seeing lots of unnecessary error
     # messages.
     try:
-        # (upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, garden_relay,
-        #     clock_times_upper, clock_times_lower, clock_times_garden) = init(settings)
-
         (upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, garden_relay,
-            clock_times_upper, clock_times_lower, clock_times_garden) = init_debug(settings)
+            clock_times_upper, clock_times_lower, clock_times_garden) = init(settings)
+
+        #(upper_tank, lower_tank, upper_tank_relay, lower_tank_relay, garden_relay,
+        #    clock_times_upper, clock_times_lower, clock_times_garden) = init_debug(settings)
 
 
         while True:

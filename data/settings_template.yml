@@ -1,0 +1,52 @@
+
+
+HOME_WATER_SYS :
+    # USER SETTINGS
+    CLOCK_TIMES_UPPER_TANK :
+        -
+            START : '%H:%M' # two digit  hour, min format (24 hour), e.g. 13:15 => 1:15 pm
+            STOP : '%H:%M'
+        -
+            START : '%H:%M'
+            STOP : '%H:%M'
+
+    CLOCK_TIMES_LOWER_TANK :
+	-
+            START : '%H:%M'
+            STOP : '%H:%M'
+	-
+            START : '%H:%M'
+            STOP : '%H:%M'
+    CLOCK_TIMES_GARDEN :
+        -
+            START : '%H:%M'
+            STOP : '%H:%M'
+        -
+            START : '%H:%M'
+            STOP : '%H:%M'
+
+    UPPER_TANK_LOW : # in cm
+    UPPER_TANK_HIGH : # in cm 
+
+    LOWER_TANK_LOW :# in cm
+    LOWER_TANK_HIGH : # in cm
+
+    UPPER_RELAY_MAX_DUR : # seconds
+    LOWER_RELAY_MAX_DUR : # seconds
+
+    GARDEN_RELAY_MAX_DUR : # seconds
+
+
+    UPDATE_INTERVAL : 5 # seconds - update sensor readings at this interval
+    ULTRASONIC_SENSOR_PULSE_DELAY : .1 # seconds between sensor pulses
+
+    TIMEZONE : 'Asia/Kolkata' # timezone
+
+    # GPIO PIN SETTINGS - EDIT WITH CAUTION
+    GPIO_TRIGGER_UPPER : 23 # pin 16
+    GPIO_ECHO_UPPER : 24    # pin 18
+    GPIO_RELAY_UPPER : 22 # pin 15
+    GPIO_TRIGGER_LOWER : 17 # Pin #11
+    GPIO_ECHO_LOWER : 18    # Pin #12
+    GPIO_RELAY_LOWER : 27 # 13
+    GPIO_RELAY_GARDEN : 25 # pin 22
